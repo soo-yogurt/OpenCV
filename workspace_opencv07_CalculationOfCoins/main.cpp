@@ -21,7 +21,7 @@ enum ERROR_CODE
 {
     ERROR_CANNOT_OPEN_THE_CAMERA = -2,
     ERROR_IMAGE_LOAD_FAILED,
-    SUCCES,
+    SUCCES = 1,
 };
 
 using namespace cv;
@@ -36,7 +36,7 @@ vector<Vec3f> circles;
 ERROR_CODE Open_Cam(VideoCapture* cam)
 {
     cam->open(0);
-    if (cam->isOpened())
+    if (!cam->isOpened())
     {
         cerr << "Error! Cannot open the camera" << endl;
         return ERROR_CANNOT_OPEN_THE_CAMERA;
@@ -106,16 +106,17 @@ int main()
 {
     Mat frame_or_Img;
 
-    Open_Cam(&cam);
+    ERROR_CODE err_check = Open_Cam(&cam);
 
-    while (true)
+    // Open_Cam 함수에서 리턴한 값에 따라 반복문을 실행시켜 오류 발생시 작동하지 않도록 바꾸었다.
+    while (err_check)
     {
         cam.read(frame_or_Img);
 
         Mat frame;
 
         GrayNblurr(frame_or_Img, &frame);
-
+        
         // 입력 영상과 축적 배열의 크기 비율
         // 인접한 원 중심의 최소 거리, 
         // 케니 에지 검출기 높은 임계값 100,
@@ -123,7 +124,6 @@ int main()
         // 검출할 원의 최소 반지름 0,
         // 검출할 원의 최대 반지름 0
         HoughCircles(frame, circles, HOUGH_GRADIENT, 1, 10, 130, 25, 5, 20);
-
 
         drowCircle(&frame_or_Img);
         print_sum(&frame_or_Img);
